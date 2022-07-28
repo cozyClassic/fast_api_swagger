@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import FastAPI, Path, Depends
 from .schema import UserSchema, BodyMonitorSchema,BodyMonitorUpdateSchema
 from typing import List
@@ -16,6 +16,11 @@ def get_db():
 
 app = FastAPI()
 
+def time_setter(obj:datetime):
+    if obj.microsecond >= 500_000:
+        obj += timedelta(seconds=1)
+    return obj.replace(microsecond=0)
+
 # Create
 @app.post("/body_monitor/user/{user_id}")
 async def create_body_monitor(
@@ -25,7 +30,7 @@ async def create_body_monitor(
     ):
     body_monitor_query = db.query(BodyMonitor).filter_by(
         user_id = user_id,
-        created_at = body_monitor.created_at
+        created_at = time_setter(body_monitor.created_at)
     ).first()
     if body_monitor_query is not None:
         return {"success":True, "data":"data already exists"}
