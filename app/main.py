@@ -1,8 +1,7 @@
-from fastapi import FastAPI, Query, Path, Depends
-from .schema import UserSchema, BodyMonitorSchema
+from fastapi import FastAPI, Path, Depends
+from .schema import UserSchema, BodyMonitorSchema,BodyMonitorUpdateSchema
 from typing import List
-import json
-from .model import User
+from .model import BodyMonitor, User
 from sqlalchemy.orm import Session
 from .config import SessionLocal
 
@@ -17,25 +16,43 @@ def get_db():
 app = FastAPI()
 
 # Create
-@app.post("/body_monitor/{user_id}")
+@app.post("/body_monitor/user/{user_id}")
 async def create_body_monitor(
     body_monitor:BodyMonitorSchema,
-    user_id: int = Path(title="ID of User", ge=1)):
-    return {"message": "success"}
+    db: Session = Depends(get_db),
+    user_id: int = Path(title="ID of User", ge=1)
+    ):
+    body_monitor_query = db.query(BodyMonitor).filter_by(
+        user_id = user_id,
+        created_at = body_monitor.created_at
+    ).first()
+    if body_monitor_query is not None:
+        return {"success":True, "data":"data already exists"}
+    body_monitor = BodyMonitor(
+        user_id = user_id, **body_monitor.dict()
+    )
+    db.add(body_monitor)
+    db.commit()
+    db.refresh(body_monitor)
+    return {"success":True, "data" :body_monitor}
 
 # Read
-@app.get("/body_monitor/{user_id}")
+@app.get("/body_monitor/user/{user_id}", response_model=List[BodyMonitorSchema])
 async def get_body_monitors_of_user(
     user_id: int = Path(title="ID of User", ge=1),
+    db: Session = Depends(get_db),
     page:int | None =1,
     limit:int|None=20):
-    return {"message": "Hello World"}
+    body_monitors = db.query(BodyMonitor
+        ).filter_by(user_id=user_id
+        ).offset((page-1)*limit
+        ).limit(limit
+        ).all()
+    return body_monitors
 
 # Read2
-@app.get("/users")
-async def get_user_list(
-    db: Session = Depends(get_db),
-    response_model=List[UserSchema]):
+@app.get("/users", response_model=List[UserSchema])
+async def get_user_list(db: Session = Depends(get_db)):
     users = db.query(User).all()
     return users
 
@@ -43,11 +60,27 @@ async def get_user_list(
 # Update
 @app.put("/body_monitor/{body_monitor_id}")
 async def update_body_monitor(
-    body_monitor_id: int = Path(title="ID of body_monitor", ge=1)):
-    return {"message": "success"}
+    body_monitor_update:BodyMonitorUpdateSchema,
+    db: Session = Depends(get_db),
+    body_monitor_id: int = Path(title="ID of body_monitor",
+    ge=1)):
+    body_monitor_query = db.query(BodyMonitor).filter_by(id=body_monitor_id).first()
+    if body_monitor_query is None:
+        return {"success":True, "data":"data not exists"}
+    body_monitor_dict = body_monitor_update.dict()
+    body_monitor_dict = {key:value for key,value in body_monitor_dict.items() if value}
+    db.query(BodyMonitor
+        ).filter_by(id=body_monitor_id
+        ).update(body_monitor_dict)
+    db.add(body_monitor_query)
+    db.commit()
+    db.refresh(body_monitor_query)
+    
+    return {"success":True, "data":body_monitor_query}
+
 
 # Delete
 @app.post("/body_monitor/{body_monitor_id}")
-async def delte_body_monitor(
+async def delete_body_monitor(
     body_monitor_id: int = Path(title="ID of body_monitor", ge=1)):
-    return {"message": "success"}
+    return {"success":True, "data" :""}
