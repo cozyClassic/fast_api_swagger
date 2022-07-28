@@ -15,3 +15,5 @@
 - database에 unique 처리를 할까 했으나, internal Error(500)이 뜨는게 싫어서 논리로만 적용
 - controller 분리할까 했으나, 분량이 많지 않아 보기 편하시라고 합쳐둠
 
+### 기타 고민한 부분
+- API description에 float 인것 + int 인 것을 표시하고 싶었는데, 에러나서 포기함

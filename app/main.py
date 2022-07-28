@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
-from fastapi import FastAPI, Path, Depends
-from .schema import UserSchema, BodyMonitorSchema,BodyMonitorUpdateSchema
 from typing import List
-from .model import BodyMonitor, User
+
+from fastapi import Depends, FastAPI, Path
 from sqlalchemy.orm import Session
+
 from .config import SessionLocal
+from .model import BodyMonitor, User
+from .schema import BodyMonitorSchema, BodyMonitorUpdateSchema, UserSchema
 
 
 def get_db():
@@ -48,7 +50,8 @@ async def create_body_monitor(
     return {"success":True, "data" :body_monitor}
 
 # Read
-@app.get("/body_monitor/user/{user_id}", response_model=List[BodyMonitorSchema])
+@app.get("/body_monitor/user/{user_id}",
+    response_model=List[BodyMonitorSchema])
 async def get_body_monitors_of_user(
     user_id: int = Path(title="ID of User", ge=1),
     db: Session = Depends(get_db),
