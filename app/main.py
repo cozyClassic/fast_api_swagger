@@ -14,6 +14,11 @@ def get_db():
     finally:
         db.close()
 
+def _commit(db,data):
+    db.add(data)
+    db.commit()
+    db.refresh(data)
+
 app = FastAPI()
 
 def time_setter(obj:datetime):
@@ -37,9 +42,9 @@ async def create_body_monitor(
     body_monitor = BodyMonitor(
         user_id = user_id, **body_monitor.dict()
     )
-    db.add(body_monitor)
-    db.commit()
-    db.refresh(body_monitor)
+    
+    _commit(db,body_monitor)
+
     return {"success":True, "data" :body_monitor}
 
 # Read
@@ -49,17 +54,21 @@ async def get_body_monitors_of_user(
     db: Session = Depends(get_db),
     page:int | None =1,
     limit:int|None=20):
+
     body_monitors = db.query(BodyMonitor
         ).filter_by(user_id=user_id
         ).offset((page-1)*limit
         ).limit(limit
         ).all()
+
     return body_monitors
 
 # Read2
 @app.get("/users", response_model=List[UserSchema])
 async def get_user_list(db: Session = Depends(get_db)):
+
     users = db.query(User).all()
+
     return users
 
 
@@ -70,18 +79,21 @@ async def update_body_monitor(
     db: Session = Depends(get_db),
     body_monitor_id: int = Path(title="ID of body_monitor",
     ge=1)):
+
     body_monitor_query = db.query(BodyMonitor).filter_by(id=body_monitor_id).first()
     if body_monitor_query is None:
         return {"success":False, "data":"data not exists"}
-    body_monitor_dict = body_monitor_update.dict()
-    body_monitor_dict = {key:value for key,value in body_monitor_dict.items() if value}
+    body_monitor_dict = {
+        key:value for key,value 
+        in body_monitor_update.dict().items()
+        if (value and value != 0)
+    }
     db.query(BodyMonitor
         ).filter_by(id=body_monitor_id
         ).update(body_monitor_dict)
-    db.add(body_monitor_query)
-    db.commit()
-    db.refresh(body_monitor_query)
     
+    _commit(db,body_monitor_query)
+
     return {"success":True, "data":body_monitor_query}
 
 
@@ -101,7 +113,6 @@ async def delete_body_monitor(
     db.query(BodyMonitor
         ).filter_by(id=body_monitor_id
         ).update({"deleted_at":datetime.now()})
-    db.add(body_monitor_query)
-    db.commit()
-    db.refresh(body_monitor_query)
+    
+    _commit(db, body_monitor_query)
     return {"success":True, "data":""}
