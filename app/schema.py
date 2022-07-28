@@ -11,15 +11,24 @@ class UserSchema(BaseModel):
         orm_mode = True
 
 class BodyMonitorSchema(BaseModel):
-    monitor_id: int
-    user_id: int
     created_at: datetime
-    weight: float
-    skeletal_muscle_mass: float
-    fat_weight: float
-    fat_percentage: float
-    blood_pressure_highest: int
-    blood_pressure_lowest: int
+    wt: float
+    smm: float
+    ffm: float
+    pbf: float
+    max_bp: int
+    min_bp: int
     pulse: int
+    class Config:
+        orm_mode = True
+    
+class BodyMonitorUpdateSchema(BaseModel):
+    wt: float | None = None
+    smm: float | None = None
+    ffm: float | None = None
+    pbf: float | None = None
+    max_bp: int | None = None
+    min_bp: int | None = None
+    pulse: int | None = None
     class Config:
         orm_mode = True
