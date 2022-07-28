@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import FastAPI, Path, Depends
 from .schema import UserSchema, BodyMonitorSchema,BodyMonitorUpdateSchema
 from typing import List
@@ -66,7 +67,7 @@ async def update_body_monitor(
     ge=1)):
     body_monitor_query = db.query(BodyMonitor).filter_by(id=body_monitor_id).first()
     if body_monitor_query is None:
-        return {"success":True, "data":"data not exists"}
+        return {"success":False, "data":"data not exists"}
     body_monitor_dict = body_monitor_update.dict()
     body_monitor_dict = {key:value for key,value in body_monitor_dict.items() if value}
     db.query(BodyMonitor
@@ -82,5 +83,20 @@ async def update_body_monitor(
 # Delete
 @app.post("/body_monitor/{body_monitor_id}")
 async def delete_body_monitor(
-    body_monitor_id: int = Path(title="ID of body_monitor", ge=1)):
-    return {"success":True, "data" :""}
+    db: Session = Depends(get_db),
+    body_monitor_id: int = Path(title="ID of body_monitor",
+    ge=1)):
+
+    body_monitor_query = db.query(BodyMonitor).filter_by(id=body_monitor_id).first()
+    if (
+        body_monitor_query is None  or
+        body_monitor_query.deleted_at is not None):
+        return {"success":False, "data":"data not exists"}
+    
+    db.query(BodyMonitor
+        ).filter_by(id=body_monitor_id
+        ).update({"deleted_at":datetime.now()})
+    db.add(body_monitor_query)
+    db.commit()
+    db.refresh(body_monitor_query)
+    return {"success":True, "data":""}

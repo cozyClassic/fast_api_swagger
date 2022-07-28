@@ -28,3 +28,4 @@ class BodyMonitor(Base):
     max_bp= Column(Integer)
     min_bp= Column(Integer)
     pulse= Column(Integer)
+    deleted_at=Column(DateTime)
