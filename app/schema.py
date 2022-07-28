@@ -2,10 +2,13 @@ from pydantic import BaseModel
 from datetime import datetime
 
 class UserSchema(BaseModel):
-    user_id: int
+    id: int
     age: int
     ht: float
     gender: str
+
+    class Config:
+        orm_mode = True
 
 class BodyMonitorSchema(BaseModel):
     monitor_id: int
@@ -18,3 +21,5 @@ class BodyMonitorSchema(BaseModel):
     blood_pressure_highest: int
     blood_pressure_lowest: int
     pulse: int
+    class Config:
+        orm_mode = True

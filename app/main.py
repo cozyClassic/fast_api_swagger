@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Query, Path, Depends
 from .schema import UserSchema, BodyMonitorSchema
+from typing import List
 import json
 from .model import User
 from sqlalchemy.orm import Session
@@ -32,14 +33,11 @@ async def get_body_monitors_of_user(
 
 # Read2
 @app.get("/users")
-async def get_user_list(db: Session = Depends(get_db)):
-    print(db.query(User).first())
-    print("HI!!!")
-
-
-    users = Session().query(User).first()
-    print("HI2!!!")
-    return {"message": "Hello World"}
+async def get_user_list(
+    db: Session = Depends(get_db),
+    response_model=List[UserSchema]):
+    users = db.query(User).all()
+    return users
 
 
 # Update

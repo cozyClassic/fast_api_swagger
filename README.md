@@ -1,7 +1,7 @@
 # INBODY 코딩테스트 과제
 
 ## 서버실행방법
-- $uvicorn main:app --reload
+- $uvicorn app.main:app --reload
 
 
 ### 가정한 내용
