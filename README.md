@@ -1,4 +1,4 @@
-# INBODY 코딩테스트 과제
+# fastAPI / Swagger 실습코드
 
 ## 서버 실행방법
 - $uvicorn app.main:app --reload
